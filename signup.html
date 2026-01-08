@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Void Food | Signup</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+  background:#000;
+  font-family:Segoe UI,sans-serif;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:100vh;
+  color:#fff;
+  padding:20px;
+}
+.box {
+  width:360px;
+  padding:30px;
+  background:#111;
+  border-radius:12px;
+  box-shadow:0 0 30px rgba(255,217,61,.2);
+}
+h2 { 
+  color:#FFD93D; 
+  text-align:center; 
+  margin-bottom:20px;
+}
+input {
+  width:100%;
+  padding:12px;
+  margin:10px 0;
+  border:none;
+  border-radius:6px;
+  background:#1a1a1a;
+  color:#fff;
+  font-size:14px;
+  transition:0.3s;
+}
+input:focus {
+  outline:none;
+  background:#2a2a2a;
+  box-shadow:0 0 10px rgba(255,217,61,0.3);
+}
+button {
+  width:100%;
+  padding:12px;
+  background:linear-gradient(45deg,#FF6B6B,#FFD93D);
+  border:none;
+  border-radius:30px;
+  font-weight:bold;
+  color:#fff;
+  cursor:pointer;
+  margin-top:15px;
+  transition:0.3s;
+  font-size:16px;
+}
+button:hover {
+  transform:translateY(-2px);
+  box-shadow:0 5px 20px rgba(255,107,107,0.4);
+}
+button:disabled {
+  opacity:0.5;
+  cursor:not-allowed;
+}
+a { 
+  color:#FFD93D; 
+  text-decoration:none;
+}
+a:hover { text-decoration:underline; }
+.toggle {
+  text-align:center;
+  margin-top:15px;
+  font-size:14px;
+}
+.error {
+  background:#FF6B6B;
+  color:#fff;
+  padding:12px;
+  border-radius:6px;
+  margin-bottom:15px;
+  font-size:14px;
+  display:none;
+}
+.error.show { display:block; }
+.success {
+  background:#6BCF7F;
+  color:#fff;
+  padding:12px;
+  border-radius:6px;
+  margin-bottom:15px;
+  font-size:14px;
+  display:none;
+}
+.success.show { display:block; }
+</style>
+</head>
+
+<body>
+
+<div class="box">
+  <h2>Create Account ✨</h2>
+  
+  <div id="errorMsg" class="error"></div>
+  <div id="successMsg" class="success"></div>
+
+  <input id="email" type="email" placeholder="Email address" required>
+  <input id="pass" type="password" placeholder="Password (min 6 chars)" required>
+  <input id="confirmPass" type="password" placeholder="Confirm password" required>
+  
+  <button onclick="signup()" id="signupBtn">
+    <span id="btnText">Sign Up</span>
+    <span class="loading" id="loading" style="display:none;">Creating...</span>
+  </button>
+
+  <p style="text-align:center; margin-top:20px; font-size:14px;">
+    Already have an account? <a href="login.html">Login here</a>
+  </p>
+</div>
+
+<script>
+const emailInput = document.getElementById('email');
+const passInput = document.getElementById('pass');
+const confirmPassInput = document.getElementById('confirmPass');
+const signupBtn = document.getElementById('signupBtn');
+const errorMsg = document.getElementById('errorMsg');
+const successMsg = document.getElementById('successMsg');
+
+function showError(msg) {
+  errorMsg.textContent = msg;
+  errorMsg.classList.add('show');
+  successMsg.classList.remove('show');
+}
+
+function showSuccess(msg) {
+  successMsg.textContent = msg;
+  successMsg.classList.add('show');
+  errorMsg.classList.remove('show');
+}
+
+function validateForm() {
+  const email = emailInput.value.trim();
+  const pass = passInput.value;
+  const confirmPass = confirmPassInput.value;
+
+  if (!email) {
+    showError('Email is required');
+    return false;
+  }
+  if (!email.includes('@')) {
+    showError('Invalid email format');
+    return false;
+  }
+  if (!pass) {
+    showError('Password is required');
+    return false;
+  }
+  if (pass.length < 6) {
+    showError('Password must be at least 6 characters');
+    return false;
+  }
+  if (pass !== confirmPass) {
+    showError('Passwords do not match');
+    return false;
+  }
+  return true;
+}
+
+async function signup() {
+  if (!validateForm()) return;
+
+  signupBtn.disabled = true;
+  document.getElementById('btnText').style.display = 'none';
+  document.getElementById('loading').style.display = 'inline';
+
+  const f = new FormData();
+  f.append("action", "signup");
+  f.append("email", emailInput.value.trim());
+  f.append("password", passInput.value);
+
+  try {
+    const r = await fetch("auth.php", { method: "POST", body: f });
+    const d = await r.json();
+
+    if (d.status) {
+      showSuccess('Account created! Redirecting to menu...');
+      setTimeout(() => {
+        window.location.href = "menu.php";
+      }, 1500);
+    } else {
+      showError(d.message || 'Signup failed');
+      signupBtn.disabled = false;
+      document.getElementById('btnText').style.display = 'inline';
+      document.getElementById('loading').style.display = 'none';
+    }
+  } catch (err) {
+    showError('Network error: ' + err.message);
+    signupBtn.disabled = false;
+    document.getElementById('btnText').style.display = 'inline';
+    document.getElementById('loading').style.display = 'none';
+  }
+}
+
+document.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') signup();
+});
+</script>
+
+</body>
+</html>
