@@ -125,8 +125,8 @@ DB_NAME = 'void_food'
 
 ### Payment Credentials (config.php)
 ```php
-FLW_CLIENT_ID = '572f5f0d-05e8-499f-8497-50baaebd49e6'
-FLW_CLIENT_SECRET = 'd2ViENaGmg54gnWNoNooQkAkKiQ1CB50'
+FLW_CLIENT_ID = 'ur client id'
+FLW_CLIENT_SECRET = 'ur sexcret harsh'
 ```
 
 ---
@@ -134,8 +134,8 @@ FLW_CLIENT_SECRET = 'd2ViENaGmg54gnWNoNooQkAkKiQ1CB50'
 ## 👤 User Management
 
 ### Admin Account
-- Email: `admin@voidfood.com`
-- Password: `Admin@123456`
+- Email: ``
+- Password: ``
 - Created automatically during database setup
 - Stored securely in database with password hashing
 
