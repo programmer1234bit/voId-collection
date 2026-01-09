@@ -61,8 +61,8 @@ http://localhost/void%20collection/setup-database.php
 
 ### 3. Admin Credentials (Stored in Database)
 ```
-Email:    admin@voidfood.com
-Password: Admin@123456
+Email:    
+Password: 
 ```
 ⚠️ **Change password after first login!**
 
