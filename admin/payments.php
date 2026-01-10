@@ -6,19 +6,10 @@ if (!isset($_SESSION['admin_id'])) {
     exit;
 }
 
-$result = $conn->query("
-    SELECT o.*, u.email, o.phone
-    FROM orders o
-    LEFT JOIN users u ON o.user_id = u.id
-    ORDER BY o.created_at DESC
-");
+$admin_email = $_SESSION['admin_email'];
 
-$orders = [];
-if ($result && $result->num_rows > 0) {
-    while ($row = $result->fetch_assoc()) {
-        $orders[] = $row;
-    }
-}
+// Fetch all payment logs
+$result = $conn->query("SELECT * FROM payment_logs ORDER BY created_at DESC");
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -26,7 +17,7 @@ if ($result && $result->num_rows > 0) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Orders - Admin Panel</title>
+    <title>Payment History - Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
         * {
@@ -119,6 +110,18 @@ if ($result && $result->num_rows > 0) {
             font-weight: bold;
         }
 
+        .navbar-right {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
         .logout-btn {
             background: #FF6B6B;
             color: #fff;
@@ -127,6 +130,10 @@ if ($result && $result->num_rows > 0) {
             border-radius: 6px;
             cursor: pointer;
             font-weight: bold;
+        }
+
+        .logout-btn:hover {
+            background: #ff5555;
         }
 
         .content-area {
@@ -153,6 +160,7 @@ if ($result && $result->num_rows > 0) {
         table td {
             padding: 12px;
             border-bottom: 1px solid #333;
+            color: #ccc;
         }
 
         table tr:hover {
@@ -160,38 +168,33 @@ if ($result && $result->num_rows > 0) {
         }
 
         .status-badge {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 4px;
             font-size: 12px;
+            font-weight: bold;
+        }
+
+        .status-successful {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .status-failed {
+            background: #f44336;
+            color: white;
         }
 
         .status-pending {
-            background: #FFD93D;
-            color: #000;
+            background: #ff9800;
+            color: black;
         }
 
-        .status-completed {
-            background: #6BCF7F;
-            color: #000;
-        }
-
-        .status-cancelled {
-            background: #FF6B6B;
-            color: #fff;
-        }
-
-        .empty {
-            text-align: center;
-            padding: 60px 20px;
-            color: #ccc;
-        }
-
-        .empty i {
-            font-size: 80px;
+        .ref-code {
+            font-family: monospace;
+            background: #222;
+            padding: 2px 6px;
+            border-radius: 4px;
             color: #FFD93D;
-            opacity: 0.3;
-            margin-bottom: 20px;
         }
 
         @media (max-width: 768px) {
@@ -202,10 +205,6 @@ if ($result && $result->num_rows > 0) {
             .main-content {
                 margin-left: 200px;
             }
-
-            table {
-                font-size: 12px;
-            }
         }
     </style>
 </head>
@@ -213,14 +212,15 @@ if ($result && $result->num_rows > 0) {
 <body>
 
     <div class="admin-layout">
+        <!-- Sidebar -->
         <div class="sidebar">
             <div class="sidebar-logo">
                 <i class="fas fa-crown"></i> Admin
             </div>
             <ul class="sidebar-menu">
                 <li><a href="dashboard.php"><i class="fas fa-chart-line"></i> Dashboard</a></li>
-                <li><a href="orders.php" class="active"><i class="fas fa-boxes"></i> Orders</a></li>
-                <li><a href="payments.php"><i class="fas fa-money-bill-wave"></i> Payments</a></li>
+                <li><a href="orders.php"><i class="fas fa-boxes"></i> Orders</a></li>
+                <li><a href="payments.php" class="active"><i class="fas fa-money-bill-wave"></i> Payments</a></li>
                 <li><a href="menu.php"><i class="fas fa-utensils"></i> Menu Items</a></li>
                 <li><a href="categories.php"><i class="fas fa-tags"></i> Categories</a></li>
                 <li><a href="users.php"><i class="fas fa-users"></i> Users</a></li>
@@ -228,48 +228,70 @@ if ($result && $result->num_rows > 0) {
             </ul>
         </div>
 
+        <!-- Main Content -->
         <div class="main-content">
             <div class="navbar">
-                <div class="navbar-title">📦 Customer Orders</div>
-                <a href="logout.php" class="logout-btn">Logout</a>
+                <div class="navbar-title">💳 Payment History</div>
+                <div class="navbar-right">
+                    <div class="user-info">
+                        <i class="fas fa-user-circle" style="font-size: 24px;"></i>
+                        <span>
+                            <?php echo htmlspecialchars($admin_email); ?>
+                        </span>
+                    </div>
+                    <a href="logout.php" class="logout-btn">Logout</a>
+                </div>
             </div>
 
             <div class="content-area">
-                <?php if (count($orders) > 0): ?>
+                <?php if ($result && $result->num_rows > 0): ?>
                     <table>
                         <thead>
                             <tr>
-                                <th>Order ID</th>
+                                <th>ID</th>
+                                <th>Reference</th>
                                 <th>Customer Email</th>
                                 <th>Amount</th>
                                 <th>Status</th>
-                                <th>Reference</th>
+                                <th>Method</th>
                                 <th>Date</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <?php foreach ($orders as $order): ?>
+                            <?php while ($row = $result->fetch_assoc()): ?>
                                 <tr>
-                                    <td><strong>#<?php echo $order['id']; ?></strong></td>
-                                    <td><?php echo htmlspecialchars($order['email'] ?? 'N/A'); ?></td>
-                                    <td>TZS <?php echo number_format($order['amount']); ?></td>
                                     <td>
-                                        <span class="status-badge status-<?php echo $order['status']; ?>">
-                                            <?php echo strtoupper($order['status']); ?>
+                                        <?php echo $row['id']; ?>
+                                    </td>
+                                    <td><span class="ref-code">
+                                            <?php echo htmlspecialchars($row['reference']); ?>
+                                        </span></td>
+                                    <td>
+                                        <?php echo htmlspecialchars($row['customer_email']); ?>
+                                    </td>
+                                    <td>
+                                        <?php echo number_format($row['amount']); ?>
+                                        <?php echo htmlspecialchars($row['currency']); ?>
+                                    </td>
+                                    <td>
+                                        <span class="status-badge status-<?php echo strtolower($row['status']); ?>">
+                                            <?php echo ucfirst($row['status']); ?>
                                         </span>
                                     </td>
-                                    <td><small
-                                            style="color: #999;"><?php echo substr($order['tx_id'] ?? 'N/A', 0, 10) . '...'; ?></small>
+                                    <td>
+                                        <?php echo ucfirst(str_replace('_', ' ', $row['payment_type'])); ?>
                                     </td>
-                                    <td><?php echo date('M d, Y', strtotime($order['created_at'])); ?></td>
+                                    <td>
+                                        <?php echo date('M d, Y H:i', strtotime($row['created_at'])); ?>
+                                    </td>
                                 </tr>
-                            <?php endforeach; ?>
+                            <?php endwhile; ?>
                         </tbody>
                     </table>
                 <?php else: ?>
-                    <div class="empty">
-                        <div><i class="fas fa-inbox"></i></div>
-                        <p>No orders found</p>
+                    <div style="text-align: center; padding: 50px; color: #666;">
+                        <i class="fas fa-money-check-alt" style="font-size: 48px; margin-bottom: 20px;"></i>
+                        <p>No payment records found.</p>
                     </div>
                 <?php endif; ?>
             </div>
