@@ -832,14 +832,34 @@ $features = [
                 return;
             }
 
-            // Mocking a successful send
-            alert('✅ Thank you, ' + name + '! We will contact you soon at ' + email);
+            const formData = new FormData();
+            formData.append('action', 'submit_contact');
+            formData.append('name', name);
+            formData.append('email', email);
+            formData.append('phone', phone);
+            formData.append('message', message);
 
-            // Clear form
-            document.getElementById('contactName').value = '';
-            document.getElementById('contactEmail').value = '';
-            document.getElementById('contactPhone').value = '';
-            document.getElementById('contactMessage').value = '';
+            try {
+                const response = await fetch('api.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                if (data.status) {
+                    alert('✅ Thank you, ' + name + '! Your message has been sent successfully.');
+                    // Clear form
+                    document.getElementById('contactName').value = '';
+                    document.getElementById('contactEmail').value = '';
+                    document.getElementById('contactPhone').value = '';
+                    document.getElementById('contactMessage').value = '';
+                } else {
+                    alert('❌ Error: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('❌ Failed to send message. Please try again later.');
+            }
         }
 
         /**
