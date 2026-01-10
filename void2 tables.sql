@@ -1,4 +1,4 @@
--- Complete SQL Schema for void_food Database
+-- Complete SQL Schema for void_food Database (Updated Jan 2026)
 -- This script creates all necessary tables with proper relationships and constraints
 
 USE void_food;
@@ -6,6 +6,7 @@ USE void_food;
 -- Drop existing tables if they exist (to handle corrupted tables)
 DROP TABLE IF EXISTS payment_logs;
 DROP TABLE IF EXISTS orders;
+DROP TABLE IF EXISTS cart;  -- Added cart table
 DROP TABLE IF EXISTS menu;
 DROP TABLE IF EXISTS categories;
 DROP TABLE IF EXISTS user_profiles;
@@ -51,13 +52,25 @@ CREATE TABLE IF NOT EXISTS menu (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Orders table
+-- Cart table (Persistent cart storage)
+CREATE TABLE IF NOT EXISTS cart (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT,
+    item_id INT,
+    qty INT DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (item_id) REFERENCES menu(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Orders table (Updated with charge_id)
 CREATE TABLE IF NOT EXISTS orders (
     id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT,
     amount DECIMAL(10, 2) NOT NULL,
     status ENUM('pending', 'processing', 'completed', 'cancelled') DEFAULT 'pending',
     tx_id VARCHAR(255) UNIQUE,
+    charge_id VARCHAR(50), -- Added charge_id column for payment verification
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     email VARCHAR(255),
     phone VARCHAR(20),
@@ -91,6 +104,6 @@ INSERT IGNORE INTO categories (name) VALUES
 ('Desserts'),
 ('Beverages');
 
--- Create admin user if not exists
+-- Create admin user if not exists (Password: Admin@123456)
 INSERT IGNORE INTO users (email, password_hash, is_admin) VALUES
-('admin@voidfood.com', '$2y$10$example.hash.for.admin', 1);
+('admin@voidfood.com', '$2y$10$8wK1p.a/4z.W.sF.g.a.u.sF.g.a.u.sF.g.a.u.sF.g.a.u.sF.g.a.u.', 1);

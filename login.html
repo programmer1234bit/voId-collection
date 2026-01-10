@@ -1,104 +1,239 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Login - Void Food</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #000 0%, #1a1a00 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Void Food</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-.login-container { background: #111; padding: 40px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); width: 100%; max-width: 400px; border: 1px solid #333; }
-.login-container h1 { color: #FFD93D; margin-bottom: 10px; font-size: 28px; text-align: center; }
-.login-container p { color: #ccc; text-align: center; margin-bottom: 30px; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #000 0%, #1a1a00 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-.form-group { margin-bottom: 20px; }
-.form-group label { display: block; color: #FFD93D; margin-bottom: 8px; font-weight: 500; }
-.form-group input { width: 100%; padding: 12px; border: 1px solid #333; background: #1a1a1a; color: #fff; border-radius: 6px; font-size: 14px; transition: 0.3s; }
-.form-group input:focus { outline: none; border-color: #FFD93D; box-shadow: 0 0 10px rgba(255,217,61,0.3); }
+        .login-container {
+            background: #111;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 400px;
+            border: 1px solid #333;
+        }
 
-.login-btn { width: 100%; background: linear-gradient(45deg, #FF6B6B, #FFD93D); color: #fff; padding: 12px; border: none; border-radius: 6px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.3s; margin-bottom: 15px; }
-.login-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(255,107,107,0.3); }
-.login-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .login-container h1 {
+            color: #FFD93D;
+            margin-bottom: 10px;
+            font-size: 28px;
+            text-align: center;
+        }
 
-.form-footer { text-align: center; color: #ccc; }
-.form-footer a { color: #FFD93D; text-decoration: none; font-weight: bold; }
-.form-footer a:hover { text-decoration: underline; }
+        .login-container p {
+            color: #ccc;
+            text-align: center;
+            margin-bottom: 30px;
+        }
 
-.error { background: #f8d7da; color: #721c24; padding: 12px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #f5c6cb; display: none; }
-.error.show { display: block; }
+        .form-group {
+            margin-bottom: 20px;
+        }
 
-.success { background: #d4edda; color: #155724; padding: 12px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #c3e6cb; display: none; }
-.success.show { display: block; }
+        .form-group label {
+            display: block;
+            color: #FFD93D;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
 
-@media (max-width: 480px) { .login-container { padding: 30px 20px; } }
-</style>
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #333;
+            background: #1a1a1a;
+            color: #fff;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #FFD93D;
+            box-shadow: 0 0 10px rgba(255, 217, 61, 0.3);
+        }
+
+        .login-btn {
+            width: 100%;
+            background: linear-gradient(45deg, #FF6B6B, #FFD93D);
+            color: #fff;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-bottom: 15px;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255, 107, 107, 0.3);
+        }
+
+        .login-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .form-footer {
+            text-align: center;
+            color: #ccc;
+        }
+
+        .form-footer a {
+            color: #FFD93D;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .form-footer a:hover {
+            text-decoration: underline;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border: 1px solid #f5c6cb;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border: 1px solid #c3e6cb;
+            display: none;
+        }
+
+        .success.show {
+            display: block;
+        }
+
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 30px 20px;
+            }
+        }
+    </style>
 </head>
+
 <body>
 
-<div class="login-container">
-    <h1>🔐 Login</h1>
-    <p>Access your account</p>
-    
-    <div id="errorMsg" class="error"></div>
-    <div id="successMsg" class="success"></div>
-    
-    <form id="loginForm" onsubmit="handleLogin(event)">
-        <div class="form-group">
-            <label for="email">Email Address</label>
-            <input type="email" id="email" name="email" required placeholder="your@email.com">
-        </div>
-        <div class="form-group">
-            <label for="password">Password</label>
-            <input type="password" id="password" name="password" required placeholder="••••••••">
-        </div>
-        <button type="submit" class="login-btn" id="loginBtn">Login</button>
-    </form>
-    
-    <div class="form-footer">
-        Don't have an account? <a href="register.html">Sign up here</a>
-    </div>
-</div>
+    <div class="login-container">
+        <h1>🔐 Login</h1>
+        <p>Access your account</p>
 
-<script>
-async function handleLogin(e) {
-    e.preventDefault();
-    
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
-    const errorDiv = document.getElementById('errorMsg');
-    const loginBtn = document.getElementById('loginBtn');
-    
-    errorDiv.classList.remove('show');
-    loginBtn.disabled = true;
-    loginBtn.textContent = 'Logging in...';
-    
-    try {
-        const f = new FormData();
-        f.append('action', 'login');
-        f.append('email', email);
-        f.append('password', password);
-        
-        const r = await fetch('api.php', { method: 'POST', body: f });
-        const d = await r.json();
-        
-        if (d.status) {
-            window.location.href = 'dashboard.php';
-        } else {
-            errorDiv.textContent = '❌ ' + (d.message || 'Invalid credentials');
-            errorDiv.classList.add('show');
-            loginBtn.disabled = false;
-            loginBtn.textContent = 'Login';
+        <div id="errorMsg" class="error"></div>
+        <div id="successMsg" class="success"></div>
+
+        <form id="loginForm" onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" required placeholder="your@email.com">
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required placeholder="••••••••">
+            </div>
+            <button type="submit" class="login-btn" id="loginBtn">Login</button>
+        </form>
+
+        <div class="form-footer">
+            Don't have an account? <a href="register.html">Sign up here</a>
+        </div>
+    </div>
+
+    <script>
+        async function handleLogin(e) {
+            e.preventDefault();
+
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('errorMsg');
+            const loginBtn = document.getElementById('loginBtn');
+
+            errorDiv.classList.remove('show');
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Logging in...';
+
+            try {
+                const f = new FormData();
+                f.append('action', 'login');
+                f.append('email', email);
+                f.append('password', password);
+
+                const r = await fetch('api.php', { method: 'POST', body: f });
+                const d = await r.json();
+
+                if (d.status) {
+                    // Smart redirection based on user type and context
+
+                    // Check if user has items in cart (from guest session)
+                    const guestCart = JSON.parse(localStorage.getItem('cart_guest')) || [];
+                    const hasCartItems = guestCart.length > 0;
+
+                    // Determine redirect destination
+                    let redirectUrl;
+
+                    if (d.is_admin) {
+                        // Admin users → Admin Dashboard
+                        redirectUrl = 'admin/dashboard.php';
+                    } else if (hasCartItems) {
+                        // Regular users with cart items → Cart page (to continue checkout)
+                        redirectUrl = 'cart.php';
+                    } else {
+                        // Regular users without cart → Menu page (to start shopping)
+                        redirectUrl = 'menu.php';
+                    }
+
+                    // Redirect to appropriate page
+                    window.location.href = redirectUrl;
+                } else {
+                    errorDiv.textContent = '❌ ' + (d.message || 'Invalid credentials');
+                    errorDiv.classList.add('show');
+                    loginBtn.disabled = false;
+                    loginBtn.textContent = 'Login';
+                }
+            } catch (err) {
+                errorDiv.textContent = '❌ Error: ' + err.message;
+                errorDiv.classList.add('show');
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Login';
+            }
         }
-    } catch (err) {
-        errorDiv.textContent = '❌ Error: ' + err.message;
-        errorDiv.classList.add('show');
-        loginBtn.disabled = false;
-        loginBtn.textContent = 'Login';
-    }
-}
-</script>
+    </script>
 
 </body>
+
 </html>

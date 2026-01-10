@@ -1,14 +1,16 @@
 <?php
 
-require_once '../config.php';
+require_once __DIR__ . '/../config.php';
 
-class PaymentProcessor {
+class PaymentProcessor
+{
     private $cachedToken = null;
     private $tokenExpiry = 0;
     private $clientId = '';
     private $clientSecret = '';
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->clientId = FLW_CLIENT_ID;
         $this->clientSecret = FLW_CLIENT_SECRET;
     }
@@ -16,7 +18,8 @@ class PaymentProcessor {
     /**
      * Get OAuth 2.0 Access Token from Flutterwave
      */
-    private function getAccessToken() {
+    private function getAccessToken()
+    {
         // Check if token is still valid
         if ($this->cachedToken && time() < $this->tokenExpiry) {
             return $this->cachedToken;
@@ -51,12 +54,12 @@ class PaymentProcessor {
         }
 
         $data = json_decode($response, true);
-        
+
         if (!isset($data['access_token'])) {
             error_log("❌ No access token in response: " . json_encode($data));
             throw new Exception("No access token in response");
         }
-        
+
         $this->cachedToken = $data['access_token'];
         $this->tokenExpiry = time() + ($data['expires_in'] - 60);
 
@@ -67,7 +70,8 @@ class PaymentProcessor {
     /**
      * Create Payment Link
      */
-    public function createPaymentLink($amount, $email, $name, $paymentMethod = 'mobile_money', $network = 'MTN', $cardType = 'visa') {
+    public function createPaymentLink($amount, $email, $name, $paymentMethod = 'mobile_money', $network = 'MTN', $cardType = 'visa')
+    {
         error_log("\n=== PAYMENT CREATION START ===");
         error_log("📥 Request: amount=$amount, email=$email, name=$name, method=$paymentMethod, network=$network");
 
@@ -125,13 +129,49 @@ class PaymentProcessor {
         $selectedNetwork = strtoupper($network ?: 'MTN');
         $selectedCard = strtolower($cardType ?: 'visa');
 
+        // Construct Redirect URL with normalized slashes
+        $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http");
+        $host = $_SERVER['HTTP_HOST'];
+
+        // FIX: Flutterwave rejects 'localhost' or '127.0.0.1' in redirect_url
+        // We replace it with 'lvh.me' which resolves to 127.0.0.1 but passes validation
+        if (strpos($host, 'localhost') !== false || strpos($host, '127.0.0.1') !== false) {
+            error_log("⚠️ Localhost detected ($host). Swapping to 'lvh.me' for Flutterwave validation.");
+            $host = 'lvh.me';
+        }
+
+        // Normalized directory path (forward slashes, no trailing slash)
+        $scriptPath = str_replace('\\', '/', dirname($_SERVER['PHP_SELF']));
+        $scriptPath = rtrim($scriptPath, '/');
+
+        $baseUrl = "$protocol://$host$scriptPath";
+
+        // Logic to determine correct path to payment-success.php
+        // PHP_SELF refers to the executed script (usually process-payment.php when called via API)
+        if (basename($scriptPath) === 'Payment') {
+            $successUrl = $baseUrl . "/payment-success.php";
+        } else {
+            $successUrl = $baseUrl . "/Payment/payment-success.php";
+        }
+
+        // Ensure URL has parameters for manual verification
+        // Note: Using & if ? already exists (unlikely here but good practice)
+        $separator = (strpos($successUrl, '?') === false) ? '?' : '&';
+        $successUrl .= $separator . "reference=$reference";
+
+        // Final sanity check
+        $successUrl = str_replace(' ', '%20', $successUrl);
+
+        error_log("🔗 Redirect URL set to: $successUrl");
+
         if ($method === 'mobile_money') {
             $countryInfo = $networkCountryMap[$selectedNetwork] ?? $networkCountryMap['MTN'];
-            
+
             $orchestratorPayload = [
                 'amount' => floatval($amount),
                 'currency' => $countryInfo['currency'],
                 'reference' => $reference,
+                'redirect_url' => $successUrl, // ADDED REDIRECT URL
                 'customer' => [
                     'email' => $email,
                     'name' => [
@@ -160,6 +200,7 @@ class PaymentProcessor {
                 'currency' => 'NGN',
                 'country' => 'NG',
                 'reference' => $reference,
+                'redirect_url' => $successUrl, // ADDED REDIRECT URL
                 'customer' => [
                     'email' => $email,
                     'name' => [
@@ -212,7 +253,7 @@ class PaymentProcessor {
         }
 
         $chargeResponse = json_decode($response, true);
-        
+
         error_log("📊 Decoded Response: " . json_encode($chargeResponse, JSON_PRETTY_PRINT));
 
         // Check if response is valid
@@ -241,7 +282,7 @@ class PaymentProcessor {
         // Extract charge details
         $chargeId = $chargeData['id'] ?? null;
         $chargeStatus = $chargeData['status'] ?? null;
-        
+
         error_log("Charge ID: $chargeId, Status: $chargeStatus");
 
         if (!$chargeId) {
@@ -255,7 +296,7 @@ class PaymentProcessor {
         // Check for next_action with redirect
         if (isset($chargeData['next_action']) && is_array($chargeData['next_action'])) {
             error_log("Next Action: " . json_encode($chargeData['next_action']));
-            
+
             if (isset($chargeData['next_action']['redirect_url']['url'])) {
                 $paymentLink = $chargeData['next_action']['redirect_url']['url'];
                 error_log("✅ Redirect URL: " . substr($paymentLink, 0, 100) . "...");
@@ -267,9 +308,9 @@ class PaymentProcessor {
 
         // Fallback link if no redirect
         if (!$paymentLink) {
-            $paymentLink = (isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . 
-                          dirname($_SERVER['PHP_SELF']) . '/payment-success.php?reference=' . $reference . 
-                          '&charge_id=' . $chargeId . '&status=' . $chargeStatus;
+            $paymentLink = (isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] .
+                dirname($_SERVER['PHP_SELF']) . '/payment-success.php?reference=' . $reference .
+                '&charge_id=' . $chargeId . '&status=' . $chargeStatus;
             error_log("✅ Using fallback link");
         }
 
@@ -302,8 +343,16 @@ class PaymentProcessor {
     /**
      * Verify Payment Status
      */
-    public function verifyPayment($reference) {
-        error_log("📥 Verifying payment: $reference");
+    /**
+     * Verify Payment Status using Orchestrator
+     * Requires Charge ID (not tx_ref)
+     */
+    public function verifyPayment($identifier)
+    {
+        // If identifier looks like a tx_ref (juma...), we can't verify directly in Orchestrator v4 easily without ID
+        // But let's assume we are passing charge_id now.
+
+        error_log("📥 Verifying payment via Orchestrator: $identifier");
 
         try {
             $token = $this->getAccessToken();
@@ -313,11 +362,13 @@ class PaymentProcessor {
         }
 
         $ch = curl_init();
+        // Use Orchestrator GET endpoint for direct charge status
         curl_setopt_array($ch, [
-            CURLOPT_URL => "https://developersandbox-api.flutterwave.com/charges/$reference/verify",
+            CURLOPT_URL => "https://developersandbox-api.flutterwave.com/orchestration/direct-charges/$identifier",
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HTTPHEADER => [
                 'Authorization: Bearer ' . $token,
+                'Content-Type: application/json'
             ],
             CURLOPT_TIMEOUT => 30,
             CURLOPT_SSL_VERIFYPEER => true,
@@ -329,7 +380,8 @@ class PaymentProcessor {
 
         if ($httpCode !== 200) {
             error_log("❌ Payment verification failed: HTTP $httpCode");
-            throw new Exception("Payment verification failed");
+            error_log("Response: " . $response);
+            throw new Exception("Payment verification failed: HTTP $httpCode - Response: $response");
         }
 
         $data = json_decode($response, true);
